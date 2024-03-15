@@ -8,7 +8,8 @@ const bodyParser = require('body-parser')
 const cookieParser = require('cookie-parser')
 const bcrypt = require('bcryptjs')
 const ws = require('ws');
- 
+const MessageModel = require('./models/message');
+
 dotenv.config();
 const bcryptSalt = bcrypt.genSaltSync(10);
 try {
@@ -29,6 +30,21 @@ app.use(cors(
     }
 ));
 
+
+async function getUserDataFromRequest(req){
+    return new Promise((resolve,reject)=>{
+        const token = req.cookies?.token;
+        if(token){
+            jwt.verify(token, process.env.JWT_SECRET, {}, (err,userData)=>{
+                if (err) throw error;
+                resolve(userData);                
+            })
+        }
+        else{
+            reject('no token');
+        }
+    })    
+}
 
 app.get('/profile', (req,res)=>{
     const token = req.cookies?.token;
@@ -67,6 +83,17 @@ app.post('/login', async (req,res) => {
         }
     }
 
+})
+
+app.get('/messages/:userId', async(req,res)=>{
+    const {userId} = req.params;
+    const userData = await getUserDataFromRequest(req);
+    const reqUserId = userData.userId;
+    const msgs = await MessageModel.find({
+        sender:{$in:[userId,reqUserId]}, 
+        recipient:{$in:[userId,reqUserId]},
+    }).sort({createdAt:1})
+    res.json(msgs);
 })
 
 app.post('/register', async (req,res)=>{
@@ -118,6 +145,7 @@ wss.on('connection',(connection,req)=>{
             }
         }
     }
+    //online status!
     [...wss.clients].forEach(client=>{
         client.send(JSON.stringify({
             online : [...wss.clients].map(c=>({
@@ -125,4 +153,16 @@ wss.on('connection',(connection,req)=>{
             }))
         }));
     });
+
+    connection.on('message', async(message)=>{
+        messageData = JSON.parse(message.toString());
+        const {recipient, text} = messageData;
+        if(recipient && text) {
+            const MessageDoc = await MessageModel.create({sender:connection.userId,recipient,text});
+            [...wss.clients]
+            .filter(c=>c.userId===recipient)
+            .forEach(c => c.send(JSON.stringify({text, sender:connection.userId, recipient, _id:MessageDoc._id})));
+        }
+    })
 });
+
