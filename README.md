@@ -63,5 +63,9 @@ To run the application locally, follow these steps:
 
 
 
-## License
-This project is licensed under the [License Name] License.
+## Screenshots
+![Screenshot (892)](https://github.com/demi2k-sudo/Intelli-chat/assets/85375873/1f428b34-bd13-4b53-99b5-bf829679fecc)
+![Screenshot (881)](https://github.com/demi2k-sudo/Intelli-chat/assets/85375873/8c6d99bc-8846-4b14-98fe-893445e4a17a)
+
+
+
