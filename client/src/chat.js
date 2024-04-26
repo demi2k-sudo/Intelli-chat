@@ -43,6 +43,7 @@ export default function Chat(){
 
     // const url = "https://demetrius-zweoe.eastus.inference.ml.azure.com/score";
     const url = "http://localhost:5000/chat"
+    const urlmistral = "http://localhost:1234/v1/chat/completions"
     useEffect(()=>{
         axios.get('/people').then(res=>{
             const offlinePeopleArr = res.data
@@ -165,7 +166,7 @@ export default function Chat(){
         requestBody["messages"].push({"role":"user","content":newMessageText})
         setRequestBody(requestBody)
         console.log(requestBody)
-        await fetch(url, {
+        await fetch(urlmistral, {
             method: "POST",
             body: JSON.stringify(requestBody),
             headers: requestHeaders,
